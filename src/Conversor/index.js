@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Keyboard} from 'react-native';
+import api from '../services/api';
 
-//https://api.invertexto.com/v1/currency/BRL_USD?token=1429|qV0baryRBAs7erxonr7ytsNgt6BfIydq
+
 export default class Conversor extends Component{
     constructor(props){
         super(props);
@@ -9,13 +10,24 @@ export default class Conversor extends Component{
             moedaA: props.moedaA,
             moedaB: props.moedaB,
             moedaB_valor: 0,
-            valorConvertido: 0,
+            valorConvertido: "",
         }
         this.converter = this.converter.bind(this);
     }
 
-    converter(){
-        
+    async converter(){
+        let de_para = this.state.moedaA + "_" + this.state.moedaB;
+        const response = await api.get(`currency/${de_para}?token=1429|qV0baryRBAs7erxonr7ytsNgt6BfIydq`)
+        let cotacao = response.data[de_para].price
+
+        if(this.state.moedaB_valor === "") this.setState({moedaB_valor: 0})
+
+        let resultado = (cotacao * parseFloat(this.state.moedaB_valor))
+ 
+        this.setState({valorConvertido: resultado.toFixed(2)})
+
+        Keyboard.dismiss()// feixa o teclado apos clicar no botão converter
+
     }
 
     render(){
@@ -27,7 +39,7 @@ export default class Conversor extends Component{
                 <TextInput style={styles.areaInput}
                 placeholder='Insira o valor a ser convertido'
                 keyboardType="numeric"
-                onChangeText={(moedaB_valor)=> this.setState({moedaB_valor: moedaB_valor})}
+                onChangeText={(moedaB_valor)=> this.setState({moedaB_valor: (moedaB_valor).replace(',','.')})}
                 />
 
                 <TouchableOpacity  style={styles.areaBotao}
@@ -36,7 +48,7 @@ export default class Conversor extends Component{
                     <Text style={styles.botaoTexto}>Converter</Text>
                 </TouchableOpacity>
 
-                <Text  style={styles.valorConvertido}>{this.state.valorConvertido}</Text>
+                <Text  style={styles.valorConvertido}>{(this.state.valorConvertido ===  0 ) ? "" : this.state.valorConvertido}</Text>
             </View>
         )
     }
